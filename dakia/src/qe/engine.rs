@@ -5,25 +5,26 @@ use super::query::{Composite, Map, Operator, Query, Scaler, SupplierValue, Value
 static OPERATOR_IDENTIFIRE: &str = "$";
 static LOGICAL_OPERATOR: [Operator; 2] = [Operator::And, Operator::Or];
 
-fn match_str(operator: &Operator, query_str: &str, supplier_str: &str) -> DakiaResult<bool> {
+fn match_str(operator: &Operator, qstr: &str, sstr: &str) -> DakiaResult<bool> {
     let matched = match operator {
-        Operator::Eq => query_str == supplier_str,
-        Operator::Ne => query_str != supplier_str,
-        Operator::Contains => supplier_str.contains(query_str),
-        Operator::NotContains => !supplier_str.contains(query_str),
-        Operator::StartsWith => supplier_str.starts_with(query_str),
-        Operator::NotStartWith => !supplier_str.starts_with(query_str),
-        Operator::EndsWith => supplier_str.ends_with(query_str),
-        Operator::NotEndsWith => !supplier_str.ends_with(query_str),
+        Operator::Eq => qstr == sstr,
+        Operator::Ne => qstr != sstr,
+        Operator::Contains => sstr.contains(qstr),
+        Operator::NotContains => !sstr.contains(qstr),
+        Operator::StartsWith => sstr.starts_with(qstr),
+        Operator::NotStartWith => !sstr.starts_with(qstr),
+        Operator::EndsWith => sstr.ends_with(qstr),
+        Operator::NotEndsWith => !sstr.ends_with(qstr),
         Operator::Matches => {
             // TODO: create regex registry after once dakia will be moved to shared nothing arch..
-            // registry will allow here to reuse the same compiled regex multiple throughout the application
-            let regex = pcre2::bytes::Regex::new(query_str)?;
-            regex.is_match(supplier_str.as_bytes())?
+            // registry will allow us to reuse the same compiled regex multiple times throughout the application
+            // make sure to consider thread sefty
+            let regex = pcre2::bytes::Regex::new(qstr)?;
+            regex.is_match(sstr.as_bytes())?
         }
         _ => {
             return Err(DakiaError::i_explain(format!(
-                "Invalid operator {operator:?} for string {query_str}"
+                "Invalid operator {operator:?} for string {qstr}"
             )))
         }
     };
